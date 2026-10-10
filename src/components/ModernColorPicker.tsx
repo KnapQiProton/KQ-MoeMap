@@ -7,7 +7,7 @@ interface ModernColorPickerProps {
   color: string;
   onChange: (hex: string) => void;
   onClose: () => void;
-  anchorRect?: DOMRect | null;
+  anchorElement?: HTMLElement | null;
 }
 
 // Convert Hex to HSV
@@ -61,28 +61,34 @@ export const ModernColorPicker = ({
   color,
   onChange,
   onClose,
-  anchorRect,
+  anchorElement,
 }: ModernColorPickerProps) => {
   const [initialColor] = useState(color);
   const [hsv, setHsv] = useState(() => hexToHsv(color));
   const [isCopied, setIsCopied] = useState(false);
   const [hexInput, setHexInput] = useState(color.toUpperCase());
   const [position, setPosition] = useState<{ top: number; left: number }>({ top: 120, left: 120 });
+  const [isCompactMode, setIsCompactMode] = useState(false);
 
   const satValRef = useRef<HTMLDivElement>(null);
   const isDraggingSatVal = useRef(false);
   const pickerRef = useRef<HTMLDivElement>(null);
 
-  // Calculate position relative to anchorRect
-  useEffect(() => {
-    if (!anchorRect) return;
+  // Dynamic position updater that listens to scroll and resize
+  const updatePosition = useCallback(() => {
+    const isMobile = window.innerWidth < 640 || window.innerHeight < 600;
+    setIsCompactMode(isMobile);
 
-    const pickerWidth = 288;
-    const pickerHeight = 410;
-    const padding = 12;
+    if (isMobile) return; // Centered via CSS flexbox
+
+    if (!anchorElement) return;
+    const rect = anchorElement.getBoundingClientRect();
+    const pickerWidth = 300;
+    const pickerHeight = 420;
+    const padding = 16;
 
     // Horizontal placement
-    let left = anchorRect.left;
+    let left = rect.left;
     if (left + pickerWidth > window.innerWidth - padding) {
       left = window.innerWidth - pickerWidth - padding;
     }
@@ -90,19 +96,31 @@ export const ModernColorPicker = ({
       left = padding;
     }
 
-    // Vertical placement: prefer below, flip above if not enough space
-    let top = anchorRect.bottom + 8;
+    // Vertical placement: prefer below, flip above if needed
+    let top = rect.bottom + 8;
     if (top + pickerHeight > window.innerHeight - padding) {
-      const topAbove = anchorRect.top - pickerHeight - 8;
+      const topAbove = rect.top - pickerHeight - 8;
       if (topAbove >= padding) {
         top = topAbove;
       } else {
+        // Clamp into viewport
         top = Math.max(padding, window.innerHeight - pickerHeight - padding);
       }
     }
 
     setPosition({ top, left });
-  }, [anchorRect]);
+  }, [anchorElement]);
+
+  // Keep position synced on scroll (capturing all container scrolls) and window resize
+  useEffect(() => {
+    updatePosition();
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [updatePosition]);
 
   // Sync internal state when external color changes
   useEffect(() => {
@@ -139,6 +157,7 @@ export const ModernColorPicker = ({
     };
     const handleTouchMove = (e: TouchEvent) => {
       if (isDraggingSatVal.current && e.touches[0]) {
+        e.preventDefault(); // Prevent touch scroll during color pick
         handleSatValMove(e.touches[0].clientX, e.touches[0].clientY);
       }
     };
@@ -148,7 +167,7 @@ export const ModernColorPicker = ({
 
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
-    window.addEventListener('touchmove', handleTouchMove);
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
     window.addEventListener('touchend', handleMouseUp);
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
@@ -157,6 +176,15 @@ export const ModernColorPicker = ({
       window.removeEventListener('touchend', handleMouseUp);
     };
   }, [handleSatValMove]);
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   // Eyedropper API
   const handleEyeDropper = async () => {
@@ -201,22 +229,35 @@ export const ModernColorPicker = ({
   const bVal = Math.round(currentRgb.b * 255);
 
   const popoverContent = (
-    <div className="fixed inset-0 z-[9999] pointer-events-auto">
-      {/* Invisible/subtle backdrop that catches outside clicks */}
+    <div
+      className={`fixed inset-0 z-[9999] ${
+        isCompactMode
+          ? 'flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm'
+          : 'pointer-events-auto'
+      }`}
+    >
+      {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/25 dark:bg-black/50 backdrop-blur-[1px] transition-opacity"
+        className={`fixed inset-0 transition-opacity ${
+          isCompactMode ? 'bg-transparent' : 'bg-black/20 dark:bg-black/45 backdrop-blur-[0.5px]'
+        }`}
         onClick={onClose}
       />
 
       {/* Popover Card */}
       <div
         ref={pickerRef}
-        style={{
-          position: 'fixed',
-          top: `${position.top}px`,
-          left: `${position.left}px`,
-        }}
-        className="z-10 w-72 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col space-y-3 animate-in fade-in zoom-in-95 duration-150 select-none text-slate-800 dark:text-slate-100"
+        style={
+          isCompactMode
+            ? { maxHeight: 'calc(100vh - 32px)' }
+            : {
+                position: 'fixed',
+                top: `${position.top}px`,
+                left: `${position.left}px`,
+                maxHeight: 'calc(100vh - 32px)',
+              }
+        }
+        className="relative z-10 w-[295px] max-w-full p-4 rounded-3xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col space-y-3 animate-in fade-in zoom-in-95 duration-150 select-none text-slate-800 dark:text-slate-100 overflow-y-auto overscroll-contain"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Bar */}
@@ -244,7 +285,7 @@ export const ModernColorPicker = ({
             isDraggingSatVal.current = true;
             if (e.touches[0]) handleSatValMove(e.touches[0].clientX, e.touches[0].clientY);
           }}
-          className="relative w-full h-36 rounded-xl cursor-crosshair overflow-hidden shadow-inner border border-black/10 dark:border-white/10"
+          className="relative w-full h-36 rounded-xl cursor-crosshair overflow-hidden shadow-inner border border-black/10 dark:border-white/10 touch-none"
           style={{
             backgroundColor: `hsl(${hsv.h}, 100%, 50%)`,
           }}
@@ -277,10 +318,10 @@ export const ModernColorPicker = ({
                 const newHue = Number(e.target.value);
                 updateHsv({ ...hsv, h: newHue });
               }}
-              className="w-full h-3 rounded-full appearance-none cursor-pointer outline-none shadow-inner"
+              className="w-full h-3 rounded-full appearance-none cursor-pointer outline-none shadow-inner touch-none"
               style={{
                 background:
-                  'linear-gradient(to right, #ff0000 0%, #ffff00 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #ff0000 100%)',
+                  'linear-gradient(to right, #ff0000 0%, #ffff00 17%, #0f0 33%, #0ff 50%, #00f 67%, #ff00ff 83%, #ff0000 100%)',
               }}
             />
           </div>

@@ -26,7 +26,7 @@ export const ColorStopsEditor = ({
   onReverseStops,
   onDistributeEvenly,
 }: ColorStopsEditorProps) => {
-  const [pickerAnchor, setPickerAnchor] = useState<{ id: string; rect: DOMRect } | null>(null);
+  const [pickerAnchor, setPickerAnchor] = useState<{ id: string; element: HTMLElement } | null>(null);
 
   const handleHexChange = (id: string, rawVal: string) => {
     let clean = rawVal.trim();
@@ -128,11 +128,10 @@ export const ColorStopsEditor = ({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      const rect = e.currentTarget.getBoundingClientRect();
                       if (pickerAnchor?.id === stop.id) {
                         setPickerAnchor(null);
                       } else {
-                        setPickerAnchor({ id: stop.id, rect });
+                        setPickerAnchor({ id: stop.id, element: e.currentTarget });
                       }
                     }}
                     className="w-8 h-8 rounded-lg shadow-sm border border-black/15 dark:border-white/15 flex items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 group"
@@ -198,7 +197,7 @@ export const ColorStopsEditor = ({
           color={activeStopForPicker.color}
           onChange={(newHex) => onUpdateStop(pickerAnchor.id, { color: newHex })}
           onClose={() => setPickerAnchor(null)}
-          anchorRect={pickerAnchor.rect}
+          anchorElement={pickerAnchor.element}
         />
       )}
     </div>
