@@ -150,10 +150,10 @@ export function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-        {/* Two-column layout on Desktop, stacked on Mobile */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-          {/* LEFT PANEL: Controls (5 columns on large screen) */}
-          <div className="lg:col-span-5 flex flex-col space-y-5">
+        {/* Responsive layout: flex-col on mobile, flex-row on desktop. Preview first on mobile! */}
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
+          {/* CONTROLS (Left on desktop, below preview on mobile) */}
+          <div className="w-full lg:w-5/12 order-2 lg:order-1 flex flex-col space-y-5">
             {/* 1. Magic Palette Search */}
             <section className="p-4 sm:p-5 rounded-3xl glass-panel shadow-sm border border-slate-200/80 dark:border-slate-800">
               <MagicPaletteSearch onSelectPalette={handleSelectPalette} />
@@ -192,8 +192,8 @@ export function App() {
             </section>
           </div>
 
-          {/* RIGHT PANEL: Preview Canvas (7 columns on large screen) */}
-          <div className="lg:col-span-7 flex flex-col space-y-5 sticky top-6">
+          {/* RIGHT PANEL: Preview Canvas (7 columns on desktop, FIRST on mobile) */}
+          <div className="w-full lg:w-7/12 order-1 lg:order-2 flex flex-col space-y-5 lg:sticky lg:top-6">
             <section>
               <PreviewCanvas
                 imageUrl={imageUrl}

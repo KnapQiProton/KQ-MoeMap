@@ -76,15 +76,16 @@ export const ModernColorPicker = ({
 
   // Dynamic position updater that listens to scroll and resize
   const updatePosition = useCallback(() => {
-    const isMobile = window.innerWidth < 640 || window.innerHeight < 600;
+    // On screens < 1024px (mobile/tablet) or tight vertical space, use centered modal
+    const isMobile = window.innerWidth < 1024 || window.innerHeight < 650;
     setIsCompactMode(isMobile);
 
-    if (isMobile) return; // Centered via CSS flexbox
+    if (isMobile) return; // Centered via flexbox overlay
 
     if (!anchorElement) return;
     const rect = anchorElement.getBoundingClientRect();
-    const pickerWidth = 300;
-    const pickerHeight = 420;
+    const pickerWidth = 310;
+    const pickerHeight = 440;
     const padding = 16;
 
     // Horizontal placement
@@ -103,7 +104,6 @@ export const ModernColorPicker = ({
       if (topAbove >= padding) {
         top = topAbove;
       } else {
-        // Clamp into viewport
         top = Math.max(padding, window.innerHeight - pickerHeight - padding);
       }
     }
@@ -157,7 +157,7 @@ export const ModernColorPicker = ({
     };
     const handleTouchMove = (e: TouchEvent) => {
       if (isDraggingSatVal.current && e.touches[0]) {
-        e.preventDefault(); // Prevent touch scroll during color pick
+        e.preventDefault();
         handleSatValMove(e.touches[0].clientX, e.touches[0].clientY);
       }
     };
@@ -236,7 +236,7 @@ export const ModernColorPicker = ({
           : 'pointer-events-auto'
       }`}
     >
-      {/* Backdrop */}
+      {/* Backdrop to catch clicks outside popover */}
       <div
         className={`fixed inset-0 transition-opacity ${
           isCompactMode ? 'bg-transparent' : 'bg-black/20 dark:bg-black/45 backdrop-blur-[0.5px]'
@@ -249,7 +249,7 @@ export const ModernColorPicker = ({
         ref={pickerRef}
         style={
           isCompactMode
-            ? { maxHeight: 'calc(100vh - 32px)' }
+            ? { maxHeight: 'calc(90vh)' }
             : {
                 position: 'fixed',
                 top: `${position.top}px`,
@@ -257,20 +257,20 @@ export const ModernColorPicker = ({
                 maxHeight: 'calc(100vh - 32px)',
               }
         }
-        className="relative z-10 w-[295px] max-w-full p-4 rounded-3xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col space-y-3 animate-in fade-in zoom-in-95 duration-150 select-none text-slate-800 dark:text-slate-100 overflow-y-auto overscroll-contain"
+        className="relative z-10 w-[310px] max-w-[94vw] p-4 sm:p-5 rounded-3xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col space-y-3.5 animate-in fade-in zoom-in-95 duration-150 select-none text-slate-800 dark:text-slate-100 overflow-y-auto overscroll-contain"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Bar */}
-        <div className="flex items-center justify-between pb-1 border-b border-slate-100 dark:border-slate-800">
-          <span className="text-[11px] font-semibold tracking-wider uppercase text-slate-500 dark:text-slate-400 font-mono flex items-center space-x-1.5">
+        <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
+          <span className="text-xs font-semibold tracking-wider uppercase text-slate-500 dark:text-slate-400 font-mono flex items-center space-x-1.5">
             <span className="w-2 h-2 rounded-full bg-pink-500 animate-pulse" />
             <span>Modern Color Matrix</span>
           </span>
           <button
             onClick={onClose}
-            className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            className="min-w-[36px] min-h-[36px] flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
           >
-            <X className="w-3.5 h-3.5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -285,7 +285,7 @@ export const ModernColorPicker = ({
             isDraggingSatVal.current = true;
             if (e.touches[0]) handleSatValMove(e.touches[0].clientX, e.touches[0].clientY);
           }}
-          className="relative w-full h-36 rounded-xl cursor-crosshair overflow-hidden shadow-inner border border-black/10 dark:border-white/10 touch-none"
+          className="relative w-full h-36 sm:h-38 rounded-2xl cursor-crosshair overflow-hidden shadow-inner border border-black/10 dark:border-white/10 touch-none"
           style={{
             backgroundColor: `hsl(${hsv.h}, 100%, 50%)`,
           }}
@@ -297,7 +297,7 @@ export const ModernColorPicker = ({
 
           {/* Reticle indicator thumb */}
           <div
-            className="absolute w-4 h-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-[0_0_8px_rgba(0,0,0,0.6)] pointer-events-none transition-transform"
+            className="absolute w-5 h-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-[0_0_8px_rgba(0,0,0,0.7)] pointer-events-none transition-transform"
             style={{
               left: `${hsv.s * 100}%`,
               top: `${(1 - hsv.v) * 100}%`,
@@ -318,7 +318,7 @@ export const ModernColorPicker = ({
                 const newHue = Number(e.target.value);
                 updateHsv({ ...hsv, h: newHue });
               }}
-              className="w-full h-3 rounded-full appearance-none cursor-pointer outline-none shadow-inner touch-none"
+              className="w-full h-4 sm:h-3 rounded-full appearance-none cursor-pointer outline-none shadow-inner touch-none"
               style={{
                 background:
                   'linear-gradient(to right, #ff0000 0%, #ffff00 17%, #0f0 33%, #0ff 50%, #00f 67%, #ff00ff 83%, #ff0000 100%)',
@@ -327,12 +327,12 @@ export const ModernColorPicker = ({
           </div>
         </div>
 
-        {/* Control row: Swatch comparison, Eyedropper, Hex & RGB values */}
+        {/* Control row: Touch-friendly buttons (min 44px on mobile) */}
         <div className="flex items-center space-x-2 pt-1">
-          {/* Side-by-side color comparison swatch */}
-          <div className="flex items-center space-x-1 shrink-0">
+          {/* Swatch & Revert */}
+          <div className="flex items-center space-x-1.5 shrink-0">
             <div
-              className="w-7 h-7 rounded-lg border border-black/15 dark:border-white/15 shadow-sm"
+              className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl border border-black/15 dark:border-white/15 shadow-sm"
               style={{ backgroundColor: color }}
               title={`Active: ${color}`}
             />
@@ -342,20 +342,20 @@ export const ModernColorPicker = ({
                 setHexInput(initialColor);
                 setHsv(hexToHsv(initialColor));
               }}
-              className="w-7 h-7 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
+              className="min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] rounded-xl border border-dashed border-slate-300 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
               title={`Revert to: ${initialColor}`}
             >
-              <RotateCcw className="w-3.5 h-3.5" />
+              <RotateCcw className="w-4 h-4" />
             </button>
           </div>
 
           {/* Eyedropper pipette button */}
           <button
             onClick={handleEyeDropper}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-sky-500 dark:text-slate-400 dark:hover:text-sky-400 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition"
+            className="min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center rounded-xl text-slate-500 hover:text-sky-500 dark:text-slate-400 dark:hover:text-sky-400 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition"
             title="Pick color from screen (Eyedropper)"
           >
-            <Pipette className="w-3.5 h-3.5" />
+            <Pipette className="w-4 h-4" />
           </button>
 
           {/* Hex Input */}
@@ -366,36 +366,36 @@ export const ModernColorPicker = ({
               onChange={(e) => handleManualHexInput(e.target.value)}
               maxLength={7}
               placeholder="#HEX"
-              className="w-full px-2 py-1 text-xs font-mono font-bold rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-400 uppercase text-center"
+              className="w-full h-11 sm:h-9 px-3 text-sm font-mono font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-400 uppercase text-center"
             />
           </div>
 
           {/* Copy Hex Button */}
           <button
             onClick={handleCopyHex}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition"
+            className="min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center rounded-xl text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-slate-200 dark:border-slate-700 transition"
             title="Copy Hex"
           >
-            {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+            {isCopied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
           </button>
         </div>
 
         {/* RGB Breakdown Display */}
-        <div className="grid grid-cols-3 gap-1 text-[10px] font-mono text-center">
-          <div className="px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50">
+        <div className="grid grid-cols-3 gap-1.5 text-xs sm:text-[10px] font-mono text-center">
+          <div className="py-1.5 sm:py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50">
             <span className="text-slate-400">R:</span> {rVal}
           </div>
-          <div className="px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50">
+          <div className="py-1.5 sm:py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50">
             <span className="text-slate-400">G:</span> {gVal}
           </div>
-          <div className="px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50">
+          <div className="py-1.5 sm:py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50">
             <span className="text-slate-400">B:</span> {bVal}
           </div>
         </div>
 
         {/* Quick Swatches Grid */}
-        <div className="space-y-1 pt-1 border-t border-slate-100 dark:border-slate-800">
-          <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500">
+        <div className="space-y-1.5 pt-1 border-t border-slate-100 dark:border-slate-800">
+          <span className="text-[11px] sm:text-[10px] font-mono text-slate-400 dark:text-slate-500">
             QUICK AESTHETIC TONES:
           </span>
           <div className="grid grid-cols-5 gap-1.5 pt-0.5">
@@ -407,7 +407,7 @@ export const ModernColorPicker = ({
                   setHexInput(swatch);
                   setHsv(hexToHsv(swatch));
                 }}
-                className="w-full h-5 rounded-md border border-black/10 dark:border-white/10 shadow-sm hover:scale-110 transition-transform cursor-pointer"
+                className="w-full h-8 sm:h-6 rounded-lg border border-black/10 dark:border-white/10 shadow-sm hover:scale-105 active:scale-95 transition-transform cursor-pointer"
                 style={{ backgroundColor: swatch }}
                 title={swatch}
               />

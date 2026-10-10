@@ -108,7 +108,7 @@ export const ExportPanel = ({
         {/* Copy SVG Code */}
         <button
           onClick={handleCopySvg}
-          className={`px-3 py-2.5 rounded-xl border font-medium text-xs transition flex items-center justify-center space-x-2 ${
+          className={`px-3 py-2.5 min-h-[44px] rounded-xl border font-medium text-xs transition flex items-center justify-center space-x-2 active:scale-95 ${
             copiedType === 'svg'
               ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm'
               : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -130,7 +130,7 @@ export const ExportPanel = ({
         {/* Copy CSS */}
         <button
           onClick={handleCopyCss}
-          className={`px-3 py-2.5 rounded-xl border font-medium text-xs transition flex items-center justify-center space-x-2 ${
+          className={`px-3 py-2.5 min-h-[44px] rounded-xl border font-medium text-xs transition flex items-center justify-center space-x-2 active:scale-95 ${
             copiedType === 'css'
               ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm'
               : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -150,11 +150,11 @@ export const ExportPanel = ({
         </button>
 
         {/* Export Image Dropdown & Button */}
-        <div className="flex items-center space-x-1">
+        <div className="flex items-center space-x-1.5">
           <select
             value={exportFormat}
             onChange={(e) => setExportFormat(e.target.value as ExportFormat)}
-            className="px-2 py-2 text-xs font-mono uppercase rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 focus:outline-none"
+            className="px-2.5 py-2.5 min-h-[44px] text-xs font-mono uppercase rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 focus:outline-none"
             title="Image Format"
           >
             <option value="png">PNG</option>
@@ -165,7 +165,7 @@ export const ExportPanel = ({
           <button
             onClick={handleExportImage}
             disabled={isExporting}
-            className="flex-1 px-3 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 via-pink-500 to-purple-500 hover:from-sky-600 hover:via-pink-600 hover:to-purple-600 text-white font-medium text-xs shadow-sm shadow-pink-500/20 disabled:opacity-50 transition flex items-center justify-center space-x-1.5"
+            className="flex-1 px-3 py-2.5 min-h-[44px] rounded-xl bg-gradient-to-r from-sky-500 via-pink-500 to-purple-500 hover:from-sky-600 hover:via-pink-600 hover:to-purple-600 text-white font-medium text-xs shadow-sm shadow-pink-500/20 disabled:opacity-50 transition flex items-center justify-center space-x-1.5 active:scale-95"
           >
             <Download className="w-4 h-4" />
             <span>{isExporting ? 'Exporting...' : 'Export Image'}</span>

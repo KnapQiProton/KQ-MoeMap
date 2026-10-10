@@ -88,12 +88,12 @@ export const PreviewCanvas = ({
       {/* Main Preview Container Panel */}
       <div className="relative rounded-3xl glass-panel shadow-lg border border-slate-200/80 dark:border-slate-800 overflow-hidden flex flex-col">
         {/* Preview Control Header */}
-        <div className="p-3 sm:px-5 border-b border-slate-200/60 dark:border-slate-800/80 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/40">
+        <div className="p-2.5 sm:px-5 border-b border-slate-200/60 dark:border-slate-800/80 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 bg-slate-50/50 dark:bg-slate-900/40">
           {/* Mode Toggles */}
           <div className="flex items-center space-x-1 p-1 rounded-xl bg-slate-200/60 dark:bg-slate-800/80">
             <button
               onClick={() => setViewMode('filtered')}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition flex items-center space-x-1.5 ${
+              className={`px-3 py-1.5 sm:py-1 rounded-lg text-xs font-medium transition flex items-center space-x-1.5 ${
                 viewMode === 'filtered'
                   ? 'bg-white dark:bg-slate-700 text-sky-600 dark:text-sky-300 shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -104,18 +104,18 @@ export const PreviewCanvas = ({
             </button>
             <button
               onClick={() => setViewMode('split')}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition flex items-center space-x-1.5 ${
+              className={`px-3 py-1.5 sm:py-1 rounded-lg text-xs font-medium transition flex items-center space-x-1.5 ${
                 viewMode === 'split'
                   ? 'bg-white dark:bg-slate-700 text-sky-600 dark:text-sky-300 shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <SplitSquareVertical className="w-3.5 h-3.5" />
-              <span>Split Comparison</span>
+              <span>Split</span>
             </button>
             <button
               onClick={() => setViewMode('original')}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition flex items-center space-x-1.5 ${
+              className={`px-3 py-1.5 sm:py-1 rounded-lg text-xs font-medium transition flex items-center space-x-1.5 ${
                 viewMode === 'original'
                   ? 'bg-white dark:bg-slate-700 text-sky-600 dark:text-sky-300 shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -127,7 +127,7 @@ export const PreviewCanvas = ({
           </div>
 
           {/* Zoom and Info Controls */}
-          <div className="flex items-center space-x-1.5">
+          <div className="flex items-center space-x-1 sm:space-x-1.5">
             {imgDimensions && (
               <span className="hidden md:inline-block px-2 py-0.5 rounded text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800">
                 {imgDimensions.width} × {imgDimensions.height}px
@@ -135,7 +135,7 @@ export const PreviewCanvas = ({
             )}
             <button
               onClick={() => setZoomLevel((z) => Math.max(0.5, z - 0.25))}
-              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition min-w-[34px] min-h-[34px] flex items-center justify-center"
               title="Zoom out"
             >
               <ZoomOut className="w-4 h-4" />
@@ -145,14 +145,14 @@ export const PreviewCanvas = ({
             </span>
             <button
               onClick={() => setZoomLevel((z) => Math.min(2.5, z + 0.25))}
-              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition min-w-[34px] min-h-[34px] flex items-center justify-center"
               title="Zoom in"
             >
               <ZoomIn className="w-4 h-4" />
             </button>
             <button
               onClick={() => setZoomLevel(1)}
-              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition text-xs font-mono"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition text-xs font-mono min-w-[34px] min-h-[34px] flex items-center justify-center"
               title="Reset Zoom"
             >
               1:1
@@ -165,7 +165,7 @@ export const PreviewCanvas = ({
           ref={containerRef}
           onMouseMove={handleSplitMouseMove}
           onTouchMove={handleSplitTouchMove}
-          className="relative min-h-[440px] max-h-[640px] w-full flex items-center justify-center p-4 sm:p-8 overflow-auto tech-grid-bg select-none"
+          className="relative min-h-[260px] sm:min-h-[380px] lg:min-h-[460px] max-h-[640px] w-full flex items-center justify-center p-3 sm:p-6 lg:p-8 overflow-auto tech-grid-bg select-none"
         >
           {/* Zoom Wrapper */}
           <div
@@ -179,7 +179,7 @@ export const PreviewCanvas = ({
                 src={imageUrl}
                 alt="KQ-MoeMap Filtered Preview"
                 onLoad={handleImageLoad}
-                className="max-w-full max-h-[520px] object-contain rounded-2xl transition-all"
+                className="max-w-full max-h-[250px] sm:max-h-[380px] lg:max-h-[520px] object-contain rounded-2xl transition-all"
                 style={{
                   filter: `url(#${filterId})`,
                 }}
@@ -192,19 +192,19 @@ export const PreviewCanvas = ({
                 src={imageUrl}
                 alt="Original Preview"
                 onLoad={handleImageLoad}
-                className="max-w-full max-h-[520px] object-contain rounded-2xl transition-all"
+                className="max-w-full max-h-[250px] sm:max-h-[380px] lg:max-h-[520px] object-contain rounded-2xl transition-all"
               />
             )}
 
             {/* View Mode: Split Comparison Slider */}
             {viewMode === 'split' && (
-              <div className="relative max-w-full max-h-[520px] flex items-center justify-center overflow-hidden rounded-2xl">
+              <div className="relative max-w-full max-h-[250px] sm:max-h-[380px] lg:max-h-[520px] flex items-center justify-center overflow-hidden rounded-2xl">
                 {/* Background Layer: Filtered Image */}
                 <img
                   src={imageUrl}
                   alt="MoeMap Filtered"
                   onLoad={handleImageLoad}
-                  className="max-w-full max-h-[520px] object-contain block"
+                  className="max-w-full max-h-[250px] sm:max-h-[380px] lg:max-h-[520px] object-contain block"
                   style={{
                     filter: `url(#${filterId})`,
                   }}
