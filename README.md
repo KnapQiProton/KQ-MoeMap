@@ -1,7 +1,10 @@
 # KQ-MoeMap 🌸⚡
 > **Smart SVG Gradient Map Studio** — A modern, anime-tech aesthetic web application that maps custom multi-stop gradients to image luminance using pure SVG filters.
 
-![KQ-MoeMap](https://img.shields.io/badge/Aesthetic-Yostar%20%2F%20Anime--tech-pink?style=for-the-badge)
+🌐 **Live Website / Demo:** [https://knapqiproton.github.io/KQ-MoeMap/](https://knapqiproton.github.io/KQ-MoeMap/)
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-knapqiproton.github.io%2FKQ--MoeMap-success?style=for-the-badge&logo=githubpages)](https://knapqiproton.github.io/KQ-MoeMap/)
+![Aesthetic](https://img.shields.io/badge/Aesthetic-Yostar%20%2F%20Anime--tech-pink?style=for-the-badge)
 ![React](https://img.shields.io/badge/React-19-blue?style=for-the-badge&logo=react)
 ![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=for-the-badge&logo=vite)
 ![TailwindCSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=for-the-badge&logo=tailwind-css)
@@ -9,9 +12,17 @@
 
 ---
 
+## 🔗 Official Links & About
+
+- **Live Application:** [https://knapqiproton.github.io/KQ-MoeMap/](https://knapqiproton.github.io/KQ-MoeMap/)
+- **GitHub Repository:** [https://github.com/KnapQiProton/KQ-MoeMap](https://github.com/KnapQiProton/KQ-MoeMap)
+- **Author:** [KnapQiProton](https://github.com/KnapQiProton)
+
+---
+
 ## ✨ Overview
 
-**KQ-MoeMap** is an advanced SVG Filter generator and real-time image gradient-mapping tool. Inspired by the clean, tactical UI design of **Yostar / Blue Archive / Arknights** fused with soft **cute-core** aesthetics, it allows creators, designers, and developers to convert any photo or illustration into stylized duotone and multi-color gradient maps.
+**KQ-MoeMap** is an advanced SVG Filter generator and real-time image gradient-mapping tool. Inspired by the clean, tactical UI design of **Yostar / Blue Archive / Arknights** fused with soft **cute-core** aesthetics, it allows creators, designers, and developers to convert any photo, anime illustration, or manga scan into stylized duotone and multi-color gradient maps.
 
 ---
 
@@ -21,6 +32,7 @@
 - **Two-Column Layout**: High-density controls on the left, interactive real-time preview canvas on the right. Seamlessly collapses to a mobile-optimized vertical stack.
 - **Yostar & Cute-core Visual Design**: Frosted glass panels (`backdrop-blur-md`), pill badges, soft glowing borders, and tactical HUD micro-accents.
 - **Full Dark Mode**: High-contrast dark theme with zinc/slate foundations and luminous pastel accents, synchronized with `localStorage` and system preferences.
+- **About Modal**: In-app dialog featuring live link, project details, and SVG engine documentation.
 
 ### 2. ⚡ The SVG Filter Engine
 - **Luminance Extraction**: Employs `<feColorMatrix type="luminanceToAlpha">` using Rec. 709 weights (`0.2126R + 0.7152G + 0.0722B`) to convert pixel brightness into alpha luminance.
@@ -28,25 +40,38 @@
 - **Dynamic Table Values Calculation**: Dynamically generates equidistant `tableValues` for `<feFuncR>`, `<feFuncG>`, and `<feFuncB>` in `<feComponentTransfer>`.
 - **Accurate Hex Math**: Converts Hex colors directly into normalized float values `[0.0 - 1.0]` with smooth piecewise linear interpolation between arbitrary stop offsets.
 
-### 3. 🎯 Smart Color Panel & Magic Search
+### 3. 🎯 Modern Color Picker & Color Stops Editor
+- **Modern Interactive Color Matrix**:
+  - 2D Saturation / Value interactive board with draggable reticle.
+  - Smooth Rainbow Hue slider (0°–360°).
+  - Integrated **EyeDropper API** to sample any pixel from your display.
+  - Quick aesthetic swatches (Pastels, Yostar blues, Sweet confectionary, Dark slate).
+  - Side-by-side active vs. original color comparison with one-click revert.
+  - Real-time RGB channels breakdown and Hex input.
 - **Multi-stop Gradients**: Add, remove, reorder, reverse, or evenly distribute stops (minimum 2 stops).
-- **Smart Hex Field**: Real-time validation, automatic formatting, and integrated color picker.
 - **Position Sliders**: Fine-tune each stop offset from `0%` to `100%`.
-- **Magic Search / 20+ Curated Palettes**:
-  - 🌸 **Moe Pastel** (soft pinks, baby blues, warm whites)
-  - 🍓 **Cute-core** (strawberry blushes, cotton candy)
-  - ⚡ **Yostar Blue** (clinical Kivotos academy blues & whites)
-  - 🌊 **Ocean** (deep abyss to cerulean and tropical seafoam)
-  - 🍰 **Süße Farbe** (German sweet bakery pastels: apricot, vanilla, blackberry)
-  - 🌑 **Nacht** (tactical night-ops slate and stealth gunmetal)
-  - 🌆 **Cyber Neon**, 🍵 **Matcha Latte**, 🌇 **Sunset Glow**, 🍇 **Candy Pop**, and more!
 
-### 4. 🖼️ Real-time Interactive Preview
+### 4. 🔮 Magic Palette Search (20+ Curated Themes)
+- 🌸 **Moe Pastel** (soft pinks, baby blues, warm whites)
+- 🍓 **Cute-core** (strawberry blushes, cotton candy)
+- ⚡ **Yostar Blue** (clinical Kivotos academy blues & whites)
+- 🌊 **Ocean** (deep abyss to cerulean and tropical seafoam)
+- 🍰 **Süße Farbe** (German sweet bakery pastels: apricot, vanilla, blackberry)
+- 🌑 **Nacht** (tactical night-ops slate and stealth gunmetal)
+- 🌆 **Cyber Neon**, 🍵 **Matcha Latte**, 🌇 **Sunset Glow**, 🍇 **Candy Pop**, and more!
+
+### 5. 🖼️ Real-time Interactive Preview & Anime Presets
+- **Built-in Anime Sample Presets**:
+  - ⚓ **Sailor Heroine**: Silver-haired anime character under clear sky.
+  - 📖 **Manga Lineart**: High-contrast monochrome manga art (stunning for gradient map previews).
+  - 🐾 **Chibi Catgirl**: Adorable anime chibi figurine.
+  - 🚂 **Seaside Crossing**: Atmospheric coastal railway crossing & summer clouds.
+  - 🛡️ **Kivotos Vector**: Offline anime-tech vector heroine.
 - **Split Comparison Slider**: Drag interactive handle to compare filtered output with original image side-by-side.
 - **Zoom & Pan Controls**: 50% to 250% zoom and 1:1 pixel toggle.
-- **Image Upload**: Drag-and-drop file upload, file explorer picker, and built-in vector & photography presets.
+- **Custom Image Upload**: Drag-and-drop or file picker for PNG, JPG, WebP, and SVG.
 
-### 5. 📦 Export & Developer Tools
+### 6. 📦 Export & Developer Tools
 - **Copy SVG Code**: One-click copy of the ready-to-use `<svg><filter>...</filter></svg>` markup.
 - **Copy CSS**: One-click copy of the `.filter { filter: url(#kq-moemap-filter); }` rule.
 - **Export Filtered Image**: High-resolution PNG, JPG, or WEBP download via HTML5 Canvas using an optimized 256-entry lookup table.
@@ -60,6 +85,7 @@
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **Icons**: [Lucide React](https://lucide.dev/)
+- **Deployment**: [GitHub Pages](https://pages.github.com/)
 
 ---
 
@@ -82,9 +108,13 @@ npm run dev
 ```
 Open your browser at `http://localhost:5173`.
 
-### 4. Build for production
+### 4. Build & Deploy
 ```bash
+# Build for production
 npm run build
+
+# Deploy to GitHub Pages
+npm run deploy
 ```
 
 ---
@@ -129,3 +159,4 @@ Apply to any image via CSS:
 ## 📄 License
 
 MIT © [KnapQiProton](https://github.com/KnapQiProton)
+Website: [https://knapqiproton.github.io/KQ-MoeMap/](https://knapqiproton.github.io/KQ-MoeMap/)

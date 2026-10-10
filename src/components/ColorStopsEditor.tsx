@@ -1,5 +1,7 @@
-import { Plus, Trash2, ArrowUp, ArrowDown, ArrowLeftRight, Layers, Sliders } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, Trash2, ArrowUp, ArrowDown, ArrowLeftRight, Layers, Sliders, Palette } from 'lucide-react';
 import type { GradientStop } from '../types';
+import { ModernColorPicker } from './ModernColorPicker';
 
 interface ColorStopsEditorProps {
   stops: GradientStop[];
@@ -24,12 +26,13 @@ export const ColorStopsEditor = ({
   onReverseStops,
   onDistributeEvenly,
 }: ColorStopsEditorProps) => {
+  const [openPickerStopId, setOpenPickerStopId] = useState<string | null>(null);
+
   const handleHexChange = (id: string, rawVal: string) => {
     let clean = rawVal.trim();
     if (!clean.startsWith('#')) {
       clean = `#${clean}`;
     }
-    // Update color
     onUpdateStop(id, { color: clean.toUpperCase() });
   };
 
@@ -75,16 +78,17 @@ export const ColorStopsEditor = ({
       </div>
 
       {/* Stop Items List */}
-      <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1">
+      <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
         {stops.map((stop, index) => {
           const isSelected = stop.id === activeStopId;
+          const isPickerOpen = openPickerStopId === stop.id;
           const percent = Math.round(stop.offset * 100);
 
           return (
             <div
               key={stop.id}
               onClick={() => onSelectStop(stop.id)}
-              className={`p-2.5 rounded-xl border transition-all ${
+              className={`relative p-2.5 rounded-xl border transition-all ${
                 isSelected
                   ? 'bg-sky-50/70 border-sky-300 shadow-sm dark:bg-sky-950/30 dark:border-sky-700'
                   : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
@@ -117,22 +121,29 @@ export const ColorStopsEditor = ({
                   </button>
                 </div>
 
-                {/* Color Swatch & Native Color Picker */}
-                <div className="relative group shrink-0">
-                  <div
-                    className="w-8 h-8 rounded-lg shadow-sm border border-black/10 dark:border-white/10 flex items-center justify-center cursor-pointer transition-transform group-hover:scale-105"
+                {/* Modern Color Swatch Trigger */}
+                <div className="relative shrink-0">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenPickerStopId(isPickerOpen ? null : stop.id);
+                    }}
+                    className="w-8 h-8 rounded-lg shadow-sm border border-black/15 dark:border-white/15 flex items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 group relative"
                     style={{ backgroundColor: stop.color }}
+                    title="Open Modern Color Matrix Picker"
                   >
-                    <input
-                      type="color"
-                      value={stop.color.startsWith('#') && stop.color.length === 7 ? stop.color : '#000000'}
-                      onChange={(e) => {
-                        onUpdateStop(stop.id, { color: e.target.value.toUpperCase() });
-                      }}
-                      className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
-                      title="Choose color"
+                    <Palette className="w-3.5 h-3.5 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </button>
+
+                  {/* Modern Color Picker Popover */}
+                  {isPickerOpen && (
+                    <ModernColorPicker
+                      color={stop.color}
+                      onChange={(newHex) => onUpdateStop(stop.id, { color: newHex })}
+                      onClose={() => setOpenPickerStopId(null)}
                     />
-                  </div>
+                  )}
                 </div>
 
                 {/* Smart Hex Input Field */}
@@ -170,6 +181,7 @@ export const ColorStopsEditor = ({
                   disabled={stops.length <= 2}
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (openPickerStopId === stop.id) setOpenPickerStopId(null);
                     onRemoveStop(stop.id);
                   }}
                   className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 disabled:opacity-20 disabled:pointer-events-none transition"

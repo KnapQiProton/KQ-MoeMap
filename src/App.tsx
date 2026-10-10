@@ -5,6 +5,7 @@ import { ColorStopsEditor } from './components/ColorStopsEditor';
 import { ImageUploader } from './components/ImageUploader';
 import { PreviewCanvas } from './components/PreviewCanvas';
 import { ExportPanel } from './components/ExportPanel';
+import { AboutModal } from './components/AboutModal';
 import { SvgFilterDefinition } from './components/SvgFilterDefinition';
 import { CURATED_PALETTES } from './data/palettes';
 import { DEFAULT_IMAGE } from './data/sampleImages';
@@ -35,6 +36,9 @@ export function App() {
   // Source image state
   const [imageUrl, setImageUrl] = useState<string>(DEFAULT_IMAGE);
 
+  // About modal state
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
+
   // Sync dark mode class on documentElement
   useEffect(() => {
     if (darkMode) {
@@ -59,7 +63,6 @@ export function App() {
 
   // Add stop
   const handleAddStop = () => {
-    // Generate a new color interpolated or complementary
     const lastStop = stops[stops.length - 1];
     const newOffset = Math.min(1, Math.max(0, (stops[0]?.offset + lastStop?.offset) / 2));
     const newStop: GradientStop = {
@@ -97,7 +100,6 @@ export function App() {
     const temp = next[index];
     next[index] = next[targetIndex];
     next[targetIndex] = temp;
-    // Swap their offsets as well to preserve flow
     const tempOffset = next[index].offset;
     next[index].offset = next[targetIndex].offset;
     next[targetIndex].offset = tempOffset;
@@ -143,6 +145,7 @@ export function App() {
         darkMode={darkMode}
         onToggleDarkMode={() => setDarkMode(!darkMode)}
         onReset={handleReset}
+        onOpenAbout={() => setIsAboutOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -204,16 +207,36 @@ export function App() {
         </div>
       </main>
 
+      {/* About Modal */}
+      <AboutModal
+        isOpen={isAboutOpen}
+        onClose={() => setIsAboutOpen(false)}
+      />
+
       {/* Aesthetic Footer */}
       <footer className="w-full border-t border-slate-200/80 bg-white/50 backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-900/50 py-4 px-6 text-center text-xs text-slate-500 dark:text-slate-400 mt-8 transition-colors">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center space-x-2">
             <span className="font-semibold text-slate-700 dark:text-slate-300">KQ-MoeMap</span>
             <span>—</span>
-            <span>Anime-Tech Smart SVG Gradient Map Tool</span>
+            <button
+              onClick={() => setIsAboutOpen(true)}
+              className="text-sky-500 hover:text-sky-600 dark:text-sky-400 underline font-medium"
+            >
+              About & Live Demo
+            </button>
           </div>
-          <div className="font-mono text-[11px] text-slate-400 dark:text-slate-500">
-            ENGINE: feColorMatrix + feComponentTransfer // sRGB
+          <div className="flex items-center space-x-3 font-mono text-[11px] text-slate-400 dark:text-slate-500">
+            <a
+              href="https://knapqiproton.github.io/KQ-MoeMap/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-pink-500 transition"
+            >
+              knapqiproton.github.io/KQ-MoeMap
+            </a>
+            <span>•</span>
+            <span>sRGB MATRIX</span>
           </div>
         </div>
       </footer>

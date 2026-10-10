@@ -1,15 +1,17 @@
-import { Sun, Moon, Sparkles, RefreshCw } from 'lucide-react';
+import { Sun, Moon, Sparkles, RefreshCw, Info } from 'lucide-react';
 
 interface HeaderProps {
   darkMode: boolean;
   onToggleDarkMode: () => void;
   onReset: () => void;
+  onOpenAbout: () => void;
 }
 
 export const Header = ({
   darkMode,
   onToggleDarkMode,
   onReset,
+  onOpenAbout,
 }: HeaderProps) => {
   return (
     <header className="relative z-20 w-full border-b border-slate-200/80 bg-white/70 backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-900/70 transition-colors">
@@ -43,6 +45,16 @@ export const Header = ({
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
             <span>SVG_MATRIX // READY</span>
           </div>
+
+          {/* About Modal trigger button */}
+          <button
+            onClick={onOpenAbout}
+            className="flex items-center space-x-1.5 px-2.5 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition"
+            title="About KQ-MoeMap & Live Website"
+          >
+            <Info className="w-4 h-4 text-sky-500" />
+            <span className="hidden sm:inline">About</span>
+          </button>
 
           {/* Reset to defaults */}
           <button
