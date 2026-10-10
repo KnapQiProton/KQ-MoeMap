@@ -66,7 +66,6 @@
   - 📖 **Manga Lineart**: High-contrast monochrome manga art (stunning for gradient map previews).
   - 🐾 **Chibi Catgirl**: Adorable anime chibi figurine.
   - 🚂 **Seaside Crossing**: Atmospheric coastal railway crossing & summer clouds.
-  - 🛡️ **Kivotos Vector**: Offline anime-tech vector heroine.
 - **Split Comparison Slider**: Drag interactive handle to compare filtered output with original image side-by-side.
 - **Zoom & Pan Controls**: 50% to 250% zoom and 1:1 pixel toggle.
 - **Custom Image Upload**: Drag-and-drop or file picker for PNG, JPG, WebP, and SVG.
