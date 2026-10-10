@@ -26,7 +26,7 @@ export const ColorStopsEditor = ({
   onReverseStops,
   onDistributeEvenly,
 }: ColorStopsEditorProps) => {
-  const [openPickerStopId, setOpenPickerStopId] = useState<string | null>(null);
+  const [pickerAnchor, setPickerAnchor] = useState<{ id: string; rect: DOMRect } | null>(null);
 
   const handleHexChange = (id: string, rawVal: string) => {
     let clean = rawVal.trim();
@@ -35,6 +35,8 @@ export const ColorStopsEditor = ({
     }
     onUpdateStop(id, { color: clean.toUpperCase() });
   };
+
+  const activeStopForPicker = stops.find((s) => s.id === pickerAnchor?.id);
 
   return (
     <div className="w-full space-y-3">
@@ -81,7 +83,6 @@ export const ColorStopsEditor = ({
       <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
         {stops.map((stop, index) => {
           const isSelected = stop.id === activeStopId;
-          const isPickerOpen = openPickerStopId === stop.id;
           const percent = Math.round(stop.offset * 100);
 
           return (
@@ -127,23 +128,19 @@ export const ColorStopsEditor = ({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setOpenPickerStopId(isPickerOpen ? null : stop.id);
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      if (pickerAnchor?.id === stop.id) {
+                        setPickerAnchor(null);
+                      } else {
+                        setPickerAnchor({ id: stop.id, rect });
+                      }
                     }}
-                    className="w-8 h-8 rounded-lg shadow-sm border border-black/15 dark:border-white/15 flex items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 group relative"
+                    className="w-8 h-8 rounded-lg shadow-sm border border-black/15 dark:border-white/15 flex items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 group"
                     style={{ backgroundColor: stop.color }}
                     title="Open Modern Color Matrix Picker"
                   >
                     <Palette className="w-3.5 h-3.5 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] opacity-0 group-hover:opacity-100 transition-opacity" />
                   </button>
-
-                  {/* Modern Color Picker Popover */}
-                  {isPickerOpen && (
-                    <ModernColorPicker
-                      color={stop.color}
-                      onChange={(newHex) => onUpdateStop(stop.id, { color: newHex })}
-                      onClose={() => setOpenPickerStopId(null)}
-                    />
-                  )}
                 </div>
 
                 {/* Smart Hex Input Field */}
@@ -181,7 +178,7 @@ export const ColorStopsEditor = ({
                   disabled={stops.length <= 2}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (openPickerStopId === stop.id) setOpenPickerStopId(null);
+                    if (pickerAnchor?.id === stop.id) setPickerAnchor(null);
                     onRemoveStop(stop.id);
                   }}
                   className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 disabled:opacity-20 disabled:pointer-events-none transition"
@@ -194,6 +191,16 @@ export const ColorStopsEditor = ({
           );
         })}
       </div>
+
+      {/* Modern Color Picker rendered via Portal (never cropped by overflow container) */}
+      {pickerAnchor && activeStopForPicker && (
+        <ModernColorPicker
+          color={activeStopForPicker.color}
+          onChange={(newHex) => onUpdateStop(pickerAnchor.id, { color: newHex })}
+          onClose={() => setPickerAnchor(null)}
+          anchorRect={pickerAnchor.rect}
+        />
+      )}
     </div>
   );
 };
