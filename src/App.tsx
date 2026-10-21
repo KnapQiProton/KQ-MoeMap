@@ -3,6 +3,7 @@ import { Header } from './components/Header';
 import { MagicPaletteSearch } from './components/MagicPaletteSearch';
 import { ColorStopsEditor } from './components/ColorStopsEditor';
 import { ImageAdjustmentsControl } from './components/ImageAdjustmentsControl';
+import { PostProcessingControl } from './components/PostProcessingControl';
 import { ImageUploader } from './components/ImageUploader';
 import { PreviewCanvas } from './components/PreviewCanvas';
 import { ExportPanel } from './components/ExportPanel';
@@ -10,8 +11,8 @@ import { AboutModal } from './components/AboutModal';
 import { SvgFilterDefinition } from './components/SvgFilterDefinition';
 import { CURATED_PALETTES } from './data/palettes';
 import { DEFAULT_IMAGE } from './data/sampleImages';
-import { DEFAULT_ADJUSTMENTS } from './utils/svgEngine';
-import type { GradientStop, Palette, ImageAdjustments } from './types';
+import { DEFAULT_ADJUSTMENTS, DEFAULT_POST_PROCESSING } from './utils/svgEngine';
+import type { GradientStop, Palette, ImageAdjustments, PostProcessingEffects } from './types';
 
 // Default initial stops based on Moe Pastel
 const createInitialStops = (): GradientStop[] => {
@@ -37,6 +38,9 @@ export function App() {
 
   // Image pre-processing adjustments state
   const [adjustments, setAdjustments] = useState<ImageAdjustments>(DEFAULT_ADJUSTMENTS);
+
+  // Image post-processing effects state (Bloom, Tactical Glitch)
+  const [postProcessing, setPostProcessing] = useState<PostProcessingEffects>(DEFAULT_POST_PROCESSING);
 
   // Source image state
   const [imageUrl, setImageUrl] = useState<string>(DEFAULT_IMAGE);
@@ -137,6 +141,7 @@ export function App() {
     setActiveStopId(defaults[0]?.id || '');
     setImageUrl(DEFAULT_IMAGE);
     setAdjustments(DEFAULT_ADJUSTMENTS);
+    setPostProcessing(DEFAULT_POST_PROCESSING);
   };
 
   const filterId = 'kq-moemap-filter';
@@ -144,7 +149,12 @@ export function App() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200">
       {/* Real SVG Filter definition in the DOM */}
-      <SvgFilterDefinition filterId={filterId} stops={stops} adjustments={adjustments} />
+      <SvgFilterDefinition
+        filterId={filterId}
+        stops={stops}
+        adjustments={adjustments}
+        postProcessing={postProcessing}
+      />
 
       {/* Top Navigation & Status Bar */}
       <Header
@@ -189,7 +199,16 @@ export function App() {
               />
             </section>
 
-            {/* 4. Image Upload & Presets */}
+            {/* 4. Post-Processing Effects (Bloom & Glitch) */}
+            <section className="p-4 sm:p-5 rounded-3xl glass-panel shadow-sm border border-slate-200/80 dark:border-slate-800">
+              <PostProcessingControl
+                postProcessing={postProcessing}
+                onUpdate={setPostProcessing}
+                onReset={() => setPostProcessing(DEFAULT_POST_PROCESSING)}
+              />
+            </section>
+
+            {/* 5. Image Upload & Presets */}
             <section className="p-4 sm:p-5 rounded-3xl glass-panel shadow-sm border border-slate-200/80 dark:border-slate-800">
               <ImageUploader
                 currentImageUrl={imageUrl}
@@ -197,13 +216,14 @@ export function App() {
               />
             </section>
 
-            {/* 5. Export & Copy Actions */}
+            {/* 6. Export & Copy Actions */}
             <section className="p-4 sm:p-5 rounded-3xl glass-panel shadow-sm border border-slate-200/80 dark:border-slate-800">
               <ExportPanel
                 stops={stops}
                 imageUrl={imageUrl}
                 filterId={filterId}
                 adjustments={adjustments}
+                postProcessing={postProcessing}
               />
             </section>
           </div>

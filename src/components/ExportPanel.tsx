@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Download, Code, Check, FileCode, Sparkles, Terminal } from 'lucide-react';
-import type { GradientStop, ExportFormat, ImageAdjustments } from '../types';
+import type { GradientStop, ExportFormat, ImageAdjustments, PostProcessingEffects } from '../types';
 import {
   generateSvgFilterCode,
   generateCssCode,
@@ -8,6 +8,7 @@ import {
   calculateTableValues,
   calculateLinearAdjustments,
   DEFAULT_ADJUSTMENTS,
+  DEFAULT_POST_PROCESSING,
 } from '../utils/svgEngine';
 
 interface ExportPanelProps {
@@ -15,6 +16,7 @@ interface ExportPanelProps {
   imageUrl: string;
   filterId?: string;
   adjustments?: ImageAdjustments;
+  postProcessing?: PostProcessingEffects;
 }
 
 export const ExportPanel = ({
@@ -22,6 +24,7 @@ export const ExportPanel = ({
   imageUrl,
   filterId = 'kq-moemap-filter',
   adjustments = DEFAULT_ADJUSTMENTS,
+  postProcessing = DEFAULT_POST_PROCESSING,
 }: ExportPanelProps) => {
   const [copiedType, setCopiedType] = useState<'svg' | 'css' | null>(null);
   const [exportFormat, setExportFormat] = useState<ExportFormat>('png');
@@ -31,7 +34,7 @@ export const ExportPanel = ({
   const hiddenCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const handleCopySvg = async () => {
-    const svgCode = generateSvgFilterCode(filterId, stops, adjustments);
+    const svgCode = generateSvgFilterCode(filterId, stops, adjustments, postProcessing);
     await navigator.clipboard.writeText(svgCode);
     setCopiedType('svg');
     setTimeout(() => setCopiedType(null), 2500);
@@ -57,7 +60,7 @@ export const ExportPanel = ({
       });
 
       if (!hiddenCanvasRef.current) return;
-      await renderGradientMapToCanvas(img, stops, hiddenCanvasRef.current, adjustments);
+      await renderGradientMapToCanvas(img, stops, hiddenCanvasRef.current, adjustments, postProcessing);
 
       const mimeType = exportFormat === 'jpeg' ? 'image/jpeg' : exportFormat === 'webp' ? 'image/webp' : 'image/png';
       const fileExt = exportFormat === 'jpeg' ? 'jpg' : exportFormat;
@@ -92,7 +95,7 @@ export const ExportPanel = ({
   const { rTable, gTable, bTable } = calculateTableValues(stops, 64);
   const { slope, intercept } = calculateLinearAdjustments(adjustments.brightness, adjustments.contrast);
   const gamma = Number(adjustments.gamma.toFixed(4));
-  const svgSnippet = generateSvgFilterCode(filterId, stops, adjustments);
+  const svgSnippet = generateSvgFilterCode(filterId, stops, adjustments, postProcessing);
   const cssSnippet = generateCssCode(filterId);
 
   return (
@@ -190,16 +193,22 @@ export const ExportPanel = ({
           <div className="flex items-center justify-between pb-2 border-b border-slate-800">
             <span className="text-pink-400 font-semibold flex items-center space-x-1.5">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Live SVG Table Values & Matrix</span>
+              <span>Live SVG Filter Pipeline Inspector</span>
             </span>
-            <span className="text-[10px] text-slate-400">Pre-processing + sRGB LUT</span>
+            <span className="text-[10px] text-slate-400">Pre + Map + Post Pipeline</span>
           </div>
 
           <div className="space-y-1 text-[11px]">
             <div>
-              <span className="text-amber-400">Pre-processing Adjustments: </span>
+              <span className="text-amber-400">Pre-processing: </span>
               <span className="text-slate-300">
                 Linear (slope={slope}, intercept={intercept}), Gamma (exp={gamma})
+              </span>
+            </div>
+            <div>
+              <span className="text-pink-400">Post-processing: </span>
+              <span className="text-slate-300">
+                Bloom ({postProcessing.enableBloom ? `${postProcessing.bloomIntensity}px` : 'OFF'}), Glitch ({postProcessing.enableGlitch ? `scale ${postProcessing.glitchIntensity * 5}px` : 'OFF'})
               </span>
             </div>
             <div>

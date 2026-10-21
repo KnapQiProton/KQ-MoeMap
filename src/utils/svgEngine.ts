@@ -1,4 +1,4 @@
-import type { GradientStop, ImageAdjustments } from '../types';
+import type { GradientStop, ImageAdjustments, PostProcessingEffects } from '../types';
 
 export interface RgbColor {
   r: number; // 0 to 1
@@ -17,6 +17,13 @@ export const DEFAULT_ADJUSTMENTS: ImageAdjustments = {
   brightness: 1,
   contrast: 1,
   gamma: 1,
+};
+
+export const DEFAULT_POST_PROCESSING: PostProcessingEffects = {
+  enableBloom: false,
+  bloomIntensity: 4,
+  enableGlitch: false,
+  glitchIntensity: 5,
 };
 
 /**
@@ -144,15 +151,36 @@ export function calculateTableValues(stops: GradientStop[], sampleCount = 64): T
 export function generateSvgFilterCode(
   filterId = 'kq-moemap-filter',
   stops: GradientStop[],
-  adjustments: ImageAdjustments = DEFAULT_ADJUSTMENTS
+  adjustments: ImageAdjustments = DEFAULT_ADJUSTMENTS,
+  postProcessing: PostProcessingEffects = DEFAULT_POST_PROCESSING
 ): string {
   const { rTable, gTable, bTable } = calculateTableValues(stops, 64);
   const { slope, intercept } = calculateLinearAdjustments(adjustments.brightness, adjustments.contrast);
   const gamma = Number(adjustments.gamma.toFixed(4));
 
+  let postProcessingXml = '';
+  const glitchInput = postProcessing.enableBloom ? 'bloomed' : 'colorMapped';
+
+  if (postProcessing.enableBloom) {
+    postProcessingXml += `
+      <!-- Step 3: Bloom / Glow -->
+      <feGaussianBlur in="colorMapped" stdDeviation="${postProcessing.bloomIntensity}" result="blurred" />
+      <feMerge result="bloomed">
+        <feMergeNode in="blurred" />
+        <feMergeNode in="colorMapped" />
+      </feMerge>`;
+  }
+
+  if (postProcessing.enableGlitch) {
+    postProcessingXml += `
+      <!-- Step 4: Tactical Glitch Displacement -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.01 0.05" numOctaves="1" result="noise" />
+      <feDisplacementMap in="${glitchInput}" in2="noise" scale="${postProcessing.glitchIntensity * 5}" xChannelSelector="R" yChannelSelector="G" result="finalOutput" />`;
+  }
+
   return `<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
   <defs>
-    <!-- KQ-MoeMap Smart SVG Gradient Map Filter with Pre-processing Adjustments -->
+    <!-- KQ-MoeMap Smart SVG Gradient Map Filter with Pre- & Post-Processing -->
     <filter id="${filterId}" color-interpolation-filters="sRGB">
       <!-- Step 0a: Linear Adjustments (Brightness & Contrast) -->
       <feComponentTransfer in="SourceGraphic" result="linearAdjusted">
@@ -179,12 +207,12 @@ export function generateSvgFilterCode(
                 0 0 0 0 1" result="lumRGB" />
 
       <!-- Step 2: Component transfer mapping through dynamic RGB table values -->
-      <feComponentTransfer in="lumRGB" result="moeMapped">
+      <feComponentTransfer in="lumRGB" result="colorMapped">
         <feFuncR type="table" tableValues="${rTable}" />
         <feFuncG type="table" tableValues="${gTable}" />
         <feFuncB type="table" tableValues="${bTable}" />
         <feFuncA type="table" tableValues="1 1" />
-      </feComponentTransfer>
+      </feComponentTransfer>${postProcessingXml}
     </filter>
   </defs>
 </svg>`;
@@ -214,14 +242,15 @@ export function stopsToCssGradient(stops: GradientStop[]): string {
 
 /**
  * Applies the gradient map directly to an HTMLCanvasElement using pixel math.
- * Applies pre-processing adjustments (brightness, contrast, gamma) before Rec. 709 luminance conversion.
- * Guarantees 100% faithful and high-resolution export without browser SVG canvas quirks.
+ * Applies pre-processing adjustments (brightness, contrast, gamma) before Rec. 709 luminance conversion,
+ * and renders post-processing bloom and glitch effects if active.
  */
 export async function renderGradientMapToCanvas(
   imgElement: HTMLImageElement,
   stops: GradientStop[],
   targetCanvas: HTMLCanvasElement,
-  adjustments: ImageAdjustments = DEFAULT_ADJUSTMENTS
+  adjustments: ImageAdjustments = DEFAULT_ADJUSTMENTS,
+  postProcessing: PostProcessingEffects = DEFAULT_POST_PROCESSING
 ): Promise<void> {
   const ctx = targetCanvas.getContext('2d');
   if (!ctx) throw new Error('Could not get 2d context');
@@ -285,4 +314,40 @@ export async function renderGradientMapToCanvas(
   }
 
   ctx.putImageData(imgData, 0, 0);
+
+  // Apply Post-Processing: Bloom
+  if (postProcessing.enableBloom && postProcessing.bloomIntensity > 0) {
+    const bloomCanvas = document.createElement('canvas');
+    bloomCanvas.width = width;
+    bloomCanvas.height = height;
+    const bCtx = bloomCanvas.getContext('2d');
+    if (bCtx) {
+      bCtx.drawImage(targetCanvas, 0, 0);
+      ctx.save();
+      ctx.filter = `blur(${postProcessing.bloomIntensity}px)`;
+      ctx.globalAlpha = 0.65;
+      ctx.drawImage(bloomCanvas, 0, 0);
+      ctx.restore();
+    }
+  }
+
+  // Apply Post-Processing: Tactical Glitch Displacement
+  if (postProcessing.enableGlitch && postProcessing.glitchIntensity > 0) {
+    const maxOffset = postProcessing.glitchIntensity * 5;
+    const glitchCanvas = document.createElement('canvas');
+    glitchCanvas.width = width;
+    glitchCanvas.height = height;
+    const gCtx = glitchCanvas.getContext('2d');
+    if (gCtx) {
+      gCtx.drawImage(targetCanvas, 0, 0);
+      let y = 0;
+      while (y < height) {
+        const sliceHeight = Math.min(height - y, Math.floor(6 + ((y * 13) % 24)));
+        const noiseVal = Math.sin(y * 0.05) * Math.cos(y * 0.013);
+        const dx = Math.round(noiseVal * maxOffset);
+        ctx.drawImage(glitchCanvas, 0, y, width, sliceHeight, dx, y, width, sliceHeight);
+        y += sliceHeight;
+      }
+    }
+  }
 }
