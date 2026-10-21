@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { MagicPaletteSearch } from './components/MagicPaletteSearch';
 import { ColorStopsEditor } from './components/ColorStopsEditor';
+import { ImageAdjustmentsControl } from './components/ImageAdjustmentsControl';
 import { ImageUploader } from './components/ImageUploader';
 import { PreviewCanvas } from './components/PreviewCanvas';
 import { ExportPanel } from './components/ExportPanel';
@@ -9,7 +10,8 @@ import { AboutModal } from './components/AboutModal';
 import { SvgFilterDefinition } from './components/SvgFilterDefinition';
 import { CURATED_PALETTES } from './data/palettes';
 import { DEFAULT_IMAGE } from './data/sampleImages';
-import type { GradientStop, Palette } from './types';
+import { DEFAULT_ADJUSTMENTS } from './utils/svgEngine';
+import type { GradientStop, Palette, ImageAdjustments } from './types';
 
 // Default initial stops based on Moe Pastel
 const createInitialStops = (): GradientStop[] => {
@@ -32,6 +34,9 @@ export function App() {
   // Color stops state
   const [stops, setStops] = useState<GradientStop[]>(createInitialStops);
   const [activeStopId, setActiveStopId] = useState<string>(stops[0]?.id || 'stop-0');
+
+  // Image pre-processing adjustments state
+  const [adjustments, setAdjustments] = useState<ImageAdjustments>(DEFAULT_ADJUSTMENTS);
 
   // Source image state
   const [imageUrl, setImageUrl] = useState<string>(DEFAULT_IMAGE);
@@ -131,6 +136,7 @@ export function App() {
     setStops(defaults);
     setActiveStopId(defaults[0]?.id || '');
     setImageUrl(DEFAULT_IMAGE);
+    setAdjustments(DEFAULT_ADJUSTMENTS);
   };
 
   const filterId = 'kq-moemap-filter';
@@ -138,7 +144,7 @@ export function App() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200">
       {/* Real SVG Filter definition in the DOM */}
-      <SvgFilterDefinition filterId={filterId} stops={stops} />
+      <SvgFilterDefinition filterId={filterId} stops={stops} adjustments={adjustments} />
 
       {/* Top Navigation & Status Bar */}
       <Header
@@ -174,7 +180,16 @@ export function App() {
               />
             </section>
 
-            {/* 3. Image Upload & Presets */}
+            {/* 3. Pre-processing Image Adjustments */}
+            <section className="p-4 sm:p-5 rounded-3xl glass-panel shadow-sm border border-slate-200/80 dark:border-slate-800">
+              <ImageAdjustmentsControl
+                adjustments={adjustments}
+                onUpdate={setAdjustments}
+                onReset={() => setAdjustments(DEFAULT_ADJUSTMENTS)}
+              />
+            </section>
+
+            {/* 4. Image Upload & Presets */}
             <section className="p-4 sm:p-5 rounded-3xl glass-panel shadow-sm border border-slate-200/80 dark:border-slate-800">
               <ImageUploader
                 currentImageUrl={imageUrl}
@@ -182,12 +197,13 @@ export function App() {
               />
             </section>
 
-            {/* 4. Export & Copy Actions */}
+            {/* 5. Export & Copy Actions */}
             <section className="p-4 sm:p-5 rounded-3xl glass-panel shadow-sm border border-slate-200/80 dark:border-slate-800">
               <ExportPanel
                 stops={stops}
                 imageUrl={imageUrl}
                 filterId={filterId}
+                adjustments={adjustments}
               />
             </section>
           </div>

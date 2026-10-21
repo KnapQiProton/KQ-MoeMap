@@ -1,18 +1,27 @@
 import { useState, useRef } from 'react';
 import { Download, Code, Check, FileCode, Sparkles, Terminal } from 'lucide-react';
-import type { GradientStop, ExportFormat } from '../types';
-import { generateSvgFilterCode, generateCssCode, renderGradientMapToCanvas, calculateTableValues } from '../utils/svgEngine';
+import type { GradientStop, ExportFormat, ImageAdjustments } from '../types';
+import {
+  generateSvgFilterCode,
+  generateCssCode,
+  renderGradientMapToCanvas,
+  calculateTableValues,
+  calculateLinearAdjustments,
+  DEFAULT_ADJUSTMENTS,
+} from '../utils/svgEngine';
 
 interface ExportPanelProps {
   stops: GradientStop[];
   imageUrl: string;
   filterId?: string;
+  adjustments?: ImageAdjustments;
 }
 
 export const ExportPanel = ({
   stops,
   imageUrl,
   filterId = 'kq-moemap-filter',
+  adjustments = DEFAULT_ADJUSTMENTS,
 }: ExportPanelProps) => {
   const [copiedType, setCopiedType] = useState<'svg' | 'css' | null>(null);
   const [exportFormat, setExportFormat] = useState<ExportFormat>('png');
@@ -22,7 +31,7 @@ export const ExportPanel = ({
   const hiddenCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const handleCopySvg = async () => {
-    const svgCode = generateSvgFilterCode(filterId, stops);
+    const svgCode = generateSvgFilterCode(filterId, stops, adjustments);
     await navigator.clipboard.writeText(svgCode);
     setCopiedType('svg');
     setTimeout(() => setCopiedType(null), 2500);
@@ -48,7 +57,7 @@ export const ExportPanel = ({
       });
 
       if (!hiddenCanvasRef.current) return;
-      await renderGradientMapToCanvas(img, stops, hiddenCanvasRef.current);
+      await renderGradientMapToCanvas(img, stops, hiddenCanvasRef.current, adjustments);
 
       const mimeType = exportFormat === 'jpeg' ? 'image/jpeg' : exportFormat === 'webp' ? 'image/webp' : 'image/png';
       const fileExt = exportFormat === 'jpeg' ? 'jpg' : exportFormat;
@@ -81,7 +90,9 @@ export const ExportPanel = ({
   };
 
   const { rTable, gTable, bTable } = calculateTableValues(stops, 64);
-  const svgSnippet = generateSvgFilterCode(filterId, stops);
+  const { slope, intercept } = calculateLinearAdjustments(adjustments.brightness, adjustments.contrast);
+  const gamma = Number(adjustments.gamma.toFixed(4));
+  const svgSnippet = generateSvgFilterCode(filterId, stops, adjustments);
   const cssSnippet = generateCssCode(filterId);
 
   return (
@@ -181,10 +192,16 @@ export const ExportPanel = ({
               <Sparkles className="w-3.5 h-3.5" />
               <span>Live SVG Table Values & Matrix</span>
             </span>
-            <span className="text-[10px] text-slate-400">64-point sRGB table</span>
+            <span className="text-[10px] text-slate-400">Pre-processing + sRGB LUT</span>
           </div>
 
           <div className="space-y-1 text-[11px]">
+            <div>
+              <span className="text-amber-400">Pre-processing Adjustments: </span>
+              <span className="text-slate-300">
+                Linear (slope={slope}, intercept={intercept}), Gamma (exp={gamma})
+              </span>
+            </div>
             <div>
               <span className="text-sky-400">feFuncR tableValues: </span>
               <span className="text-slate-400 break-all">{rTable.slice(0, 70)}...</span>
@@ -208,7 +225,7 @@ export const ExportPanel = ({
 
           <div className="space-y-1 pt-2 border-t border-slate-800">
             <p className="text-[10px] text-slate-400 uppercase tracking-wider">Generated SVG Code:</p>
-            <pre className="max-h-36 overflow-y-auto p-2 rounded-lg bg-black/40 text-[10px] leading-relaxed text-slate-300 scrollbar-thin">
+            <pre className="max-h-48 overflow-y-auto p-2 rounded-lg bg-black/40 text-[10px] leading-relaxed text-slate-300 scrollbar-thin">
               {svgSnippet}
             </pre>
           </div>

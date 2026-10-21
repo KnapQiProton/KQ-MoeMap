@@ -1,4 +1,4 @@
-import type { GradientStop } from '../types';
+import type { GradientStop, ImageAdjustments } from '../types';
 
 export interface RgbColor {
   r: number; // 0 to 1
@@ -11,6 +11,26 @@ export interface TableValuesResult {
   gTable: string;
   bTable: string;
   samples: RgbColor[];
+}
+
+export const DEFAULT_ADJUSTMENTS: ImageAdjustments = {
+  brightness: 1,
+  contrast: 1,
+  gamma: 1,
+};
+
+/**
+ * Calculates linear adjustments (brightness & contrast) for SVG feFunc linear type.
+ * Contrast formula: slope=contrast, intercept=-(0.5*contrast)+0.5
+ * Brightness formula: shifts intercept by (brightness - 1)
+ */
+export function calculateLinearAdjustments(
+  brightness: number,
+  contrast: number
+): { slope: number; intercept: number } {
+  const slope = Number(contrast.toFixed(4));
+  const intercept = Number((-(0.5 * contrast) + 0.5 + (brightness - 1)).toFixed(4));
+  return { slope, intercept };
 }
 
 /**
@@ -121,21 +141,43 @@ export function calculateTableValues(stops: GradientStop[], sampleCount = 64): T
 /**
  * Generates the complete, standalone SVG filter markup string.
  */
-export function generateSvgFilterCode(filterId = 'kq-moemap-filter', stops: GradientStop[]): string {
+export function generateSvgFilterCode(
+  filterId = 'kq-moemap-filter',
+  stops: GradientStop[],
+  adjustments: ImageAdjustments = DEFAULT_ADJUSTMENTS
+): string {
   const { rTable, gTable, bTable } = calculateTableValues(stops, 64);
+  const { slope, intercept } = calculateLinearAdjustments(adjustments.brightness, adjustments.contrast);
+  const gamma = Number(adjustments.gamma.toFixed(4));
 
   return `<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
   <defs>
-    <!-- KQ-MoeMap Smart SVG Gradient Map Filter -->
+    <!-- KQ-MoeMap Smart SVG Gradient Map Filter with Pre-processing Adjustments -->
     <filter id="${filterId}" color-interpolation-filters="sRGB">
-      <!-- Step 1: Convert image luminance to alpha map -->
-      <feColorMatrix type="luminanceToAlpha" result="lumAlpha" />
+      <!-- Step 0a: Linear Adjustments (Brightness & Contrast) -->
+      <feComponentTransfer in="SourceGraphic" result="linearAdjusted">
+        <feFuncR type="linear" slope="${slope}" intercept="${intercept}" />
+        <feFuncG type="linear" slope="${slope}" intercept="${intercept}" />
+        <feFuncB type="linear" slope="${slope}" intercept="${intercept}" />
+      </feComponentTransfer>
+
+      <!-- Step 0b: Gamma Adjustment -->
+      <feComponentTransfer in="linearAdjusted" result="adjustedImage">
+        <feFuncR type="gamma" amplitude="1" exponent="${gamma}" offset="0" />
+        <feFuncG type="gamma" amplitude="1" exponent="${gamma}" offset="0" />
+        <feFuncB type="gamma" amplitude="1" exponent="${gamma}" offset="0" />
+      </feComponentTransfer>
+
+      <!-- Step 1: Convert adjusted image luminance to alpha map -->
+      <feColorMatrix in="adjustedImage" type="luminanceToAlpha" result="lumAlpha" />
+
       <!-- Route alpha luminance into RGB channels -->
       <feColorMatrix in="lumAlpha" type="matrix" 
         values="0 0 0 1 0
                 0 0 0 1 0
                 0 0 0 1 0
                 0 0 0 0 1" result="lumRGB" />
+
       <!-- Step 2: Component transfer mapping through dynamic RGB table values -->
       <feComponentTransfer in="lumRGB" result="moeMapped">
         <feFuncR type="table" tableValues="${rTable}" />
@@ -172,12 +214,14 @@ export function stopsToCssGradient(stops: GradientStop[]): string {
 
 /**
  * Applies the gradient map directly to an HTMLCanvasElement using pixel math.
+ * Applies pre-processing adjustments (brightness, contrast, gamma) before Rec. 709 luminance conversion.
  * Guarantees 100% faithful and high-resolution export without browser SVG canvas quirks.
  */
 export async function renderGradientMapToCanvas(
   imgElement: HTMLImageElement,
   stops: GradientStop[],
-  targetCanvas: HTMLCanvasElement
+  targetCanvas: HTMLCanvasElement,
+  adjustments: ImageAdjustments = DEFAULT_ADJUSTMENTS
 ): Promise<void> {
   const ctx = targetCanvas.getContext('2d');
   if (!ctx) throw new Error('Could not get 2d context');
@@ -194,7 +238,7 @@ export async function renderGradientMapToCanvas(
   const imgData = ctx.getImageData(0, 0, width, height);
   const data = imgData.data;
 
-  // Build 256-entry lookup table for maximum rendering performance
+  // Build 256-entry lookup table for gradient mapping
   const lutR = new Uint8ClampedArray(256);
   const lutG = new Uint8ClampedArray(256);
   const lutB = new Uint8ClampedArray(256);
@@ -207,13 +251,26 @@ export async function renderGradientMapToCanvas(
     lutB[L] = Math.round(sampled.b * 255);
   }
 
+  // Pre-calculate 256-entry lookup table for pre-processing adjustments:
+  // Linear (brightness & contrast): clamp(norm * slope + intercept, 0, 1)
+  // Gamma: clamp(linear ^ gamma, 0, 1)
+  const { slope, intercept } = calculateLinearAdjustments(adjustments.brightness, adjustments.contrast);
+  const gamma = adjustments.gamma;
+
+  const adjustLut = new Float32Array(256);
+  for (let v = 0; v < 256; v++) {
+    const norm = v / 255;
+    const lin = Math.max(0, Math.min(1, norm * slope + intercept));
+    adjustLut[v] = Math.max(0, Math.min(1, Math.pow(lin, gamma)));
+  }
+
   // Rec. 709 luminance weights matching SVG luminanceToAlpha
   const len = data.length;
   for (let i = 0; i < len; i += 4) {
-    const r = data[i];
-    const g = data[i + 1];
-    const b = data[i + 2];
-    const lum = Math.round(0.2126 * r + 0.7152 * g + 0.0722 * b);
+    const rAdj = adjustLut[data[i]];
+    const gAdj = adjustLut[data[i + 1]];
+    const bAdj = adjustLut[data[i + 2]];
+    const lum = Math.round((0.2126 * rAdj + 0.7152 * gAdj + 0.0722 * bAdj) * 255);
     const clampedLum = Math.max(0, Math.min(255, lum));
 
     data[i] = lutR[clampedLum];

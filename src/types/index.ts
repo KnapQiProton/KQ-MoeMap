@@ -21,4 +21,10 @@ export interface SampleImage {
   thumb?: string;
 }
 
+export interface ImageAdjustments {
+  brightness: number; // 0 to 2, default 1
+  contrast: number;   // 0 to 2, default 1
+  gamma: number;      // 0.1 to 3, default 1
+}
+
 export type ExportFormat = 'png' | 'jpeg' | 'webp';
